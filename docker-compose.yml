@@ -1,0 +1,46 @@
+version: '3.6'
+
+services:
+
+  keycloak:
+    image: jboss/keycloak
+    ports: 
+      - 7501:8080
+    networks:
+      - app-network
+    environment:
+      - KEYCLOAK_USER=${KEYCLOAK_ADMIN_USER}
+      - KEYCLOAK_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+
+  protected:
+    image: bitnami/apache
+    volumes:
+      - ./protected-api-apache/conf/localhost_vhost.conf:/vhosts/localhost_vhost.conf:ro
+      - ./protected-api-apache/htdocs/:/htdocs/:ro
+    networks:
+      - app-network
+
+  gatekeeper-apache:
+    image: silpion/apache_oidc
+    ports:
+      - 7500:80
+    networks:
+      - app-network
+    volumes:
+      - ./gatekeeper-apache/conf/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
+    environment:
+      OIDC_CRYPTO_PASSPHRASE: ${OIDC_CRYPTO_PASSPHRASE}
+      KEYCLOAK_ADDR: ${KEYCLOAK_ADDR}
+      KEYCLOAK_REALM: ${GATEKEEPER_REALM}
+      CLIENT_ID: ${GATEKEEPER_CLIENT_ID}
+      CLIENT_SECRET: ${GATEKEEPER_CLIENT_SECRET}
+      FQDN: localhost
+      PROTECTED_BASE_URI: http://localhost:7500
+      PROTECTED_PATH: /
+      PROXY_PASS: http://protected:8080/
+    depends_on:
+      - protected
+    
+networks:
+  app-network:
+    driver: bridge

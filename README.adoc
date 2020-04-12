@@ -1,0 +1,36 @@
+= Development Environment for OpenID Connect enabled Apps
+
+== Installation and Configuration
+
+You need to install Docker onto your system (including Docker Compose).
+
+Determite your LAN IP adress and set the KEYCLOAK_ADDR environment variable, e.G: like this:
+
+----
+LAN_IP=$(dig +short `hostname` A)
+export KEYCLOAK_ADDR="http://${LAN_IP}:7501"
+----
+
+NOTE: It is important to set the KEYCLOAK_ADDR to your real local IP, the connections from the docker containrs to the Keycloak will not work otherwise.
+
+Start all docker containers:
+----
+docker-compose up
+----
+
+Initialise the Keycloak by creating default configuration
+----
+./keycloak/scripts/init-keycloak.sh
+----
+
+Open URL http://localhost:7500/ and login using U/P user0/password0
+
+[source,bash]
+----
+./keycloak/scripts/init-keycloak.sh
+----
+
+=== TODO: Create Ansible scripts
+----
+pip install --user ansible
+----
