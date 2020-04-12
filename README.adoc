@@ -19,16 +19,10 @@ docker-compose up
 ----
 
 Initialise the Keycloak by creating default configuration
-----
-./keycloak/scripts/init-keycloak.sh
-----
-
-Open URL http://localhost:7500/ and login using U/P user0/password0
-
 [source,bash]
-----
 ./keycloak/scripts/init-keycloak.sh
-----
+
+Open URL http://localhost:7500/ and login using U/P ``user0/password0``
 
 === TODO: Create Ansible scripts
 ----
