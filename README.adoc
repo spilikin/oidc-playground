@@ -20,7 +20,9 @@ docker-compose up
 
 Initialise the Keycloak by creating default configuration
 [source,bash]
+----
 ./keycloak/scripts/init-keycloak.sh
+----
 
 Open URL http://localhost:7500/ and login using U/P ``user0/password0``
 
