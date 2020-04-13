@@ -26,15 +26,10 @@ Initialise the Keycloak by creating default configuration
 
 Open URL http://localhost:7500/ and login using U/P ``user0/password0``
 
-=== TODO: Create Ansible scripts
-----
-pip install --user ansible
-----
-
 == Run Python client App
----
+----
 python3 app-python/app.py
----
+----
 
 TODO: make more elaborate app
 [source,bash]
