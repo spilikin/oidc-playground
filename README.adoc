@@ -4,11 +4,10 @@
 
 You need to install Docker onto your system (including Docker Compose).
 
-Determite your LAN IP adress and set the KEYCLOAK_ADDR environment variable, e.G: like this:
+Determite your local IP adress and set the HOST_IP environment variable, e.g. like this:
 
 ----
-LAN_IP=$(dig +short `hostname` A)
-export KEYCLOAK_ADDR="http://${LAN_IP}:7501"
+export HOST_IP=$(dig +short `hostname` A)
 ----
 
 NOTE: It is important to set the KEYCLOAK_ADDR to your real local IP, the connections from the docker containrs to the Keycloak will not work otherwise.
@@ -17,6 +16,11 @@ Start all docker containers:
 ----
 docker-compose up
 ----
+
+== Accessing the services
+
+* Protected web application http://localhost:7500/
+* Keycloak IdP U/P admin/admin: http://localhost:7501/auth/admin/
 
 Initialise the Keycloak by creating default configuration
 [source,bash]

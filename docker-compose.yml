@@ -30,7 +30,7 @@ services:
       - ./gatekeeper-apache/conf/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
     environment:
       OIDC_CRYPTO_PASSPHRASE: ${OIDC_CRYPTO_PASSPHRASE}
-      KEYCLOAK_ADDR: ${KEYCLOAK_ADDR}
+      KEYCLOAK_ADDR: http://${HOST_IP?Environment variable HOST_IP must be set}:7501
       KEYCLOAK_REALM: ${GATEKEEPER_REALM}
       CLIENT_ID: ${GATEKEEPER_CLIENT_ID}
       CLIENT_SECRET: ${GATEKEEPER_CLIENT_SECRET}
