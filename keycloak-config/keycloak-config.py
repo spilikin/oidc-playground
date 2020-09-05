@@ -1,5 +1,6 @@
 from keycloak import KeycloakAdmin
 from os import environ
+import json
 
 keycloak = KeycloakAdmin(server_url=f"{environ.get('KEYCLOAK_BASE_URL')}/auth/",
                                username=environ.get('KEYCLOAK_USER'),
@@ -53,3 +54,27 @@ keycloak.create_user({
     "credentials": [{"value": "99775533","type": "password",}]
 })
 
+# remove all key proviers
+for component in keycloak.get_components({"type": "org.keycloak.keys.KeyProvider"}):
+    keycloak.delete_component(component['id'])
+
+# Add ECDSA P256 Key
+keycloak.create_component({
+        "providerType": "org.keycloak.keys.KeyProvider",
+        "name": "ecdsa-generated",
+        "providerId": "ecdsa-generated",
+        "config": {
+          "ecdsaEllipticCurveKey": [
+            "P-256"
+          ],
+          "active": [
+            True
+          ],
+          "priority": [
+            100
+          ],
+          "enabled": [
+            True
+          ]
+        }
+})
