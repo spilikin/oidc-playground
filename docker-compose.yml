@@ -1,46 +1,81 @@
-version: '3.6'
+version: '3'
+
+networks:
+  backnet:
+    driver: bridge
 
 services:
-
-  keycloak:
-    image: jboss/keycloak
-    ports: 
-      - 7501:8080
+  frontgate:
+    image: openresty/openresty
+    restart: unless-stopped
     networks:
-      - app-network
-    environment:
-      - KEYCLOAK_USER=${KEYCLOAK_ADMIN_USER}
-      - KEYCLOAK_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
-
-  protected:
-    image: bitnami/apache
+      - backnet
     volumes:
-      - ./protected-api-apache/conf/localhost_vhost.conf:/vhosts/localhost_vhost.conf:ro
-      - ./protected-api-apache/htdocs/:/htdocs/:ro
-    networks:
-      - app-network
-
-  gatekeeper-apache:
-    image: silpion/apache_oidc
+      # Main config
+      - ./frontgate/conf.d:/etc/nginx/conf.d
+      # Certbot config
+      - ${CERTBOT_DIR}/conf:/etc/letsencrypt
+      - ${CERTBOT_DIR}/www:/var/www/certbot
+    environment:
+      KEYCLOAK_PUBLIC_HOST: ${KEYCLOAK_PUBLIC_HOST}
+    command: "/bin/sh -c \"envsubst '$${KEYCLOAK_PUBLIC_HOST}' < /etc/nginx/conf.d/keycloak.conf.template > /etc/nginx/conf.d/keycloak.conf && nginx -g 'daemon off;'\""
     ports:
-      - 7500:80
-    networks:
-      - app-network
-    volumes:
-      - ./gatekeeper-apache/conf/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
-    environment:
-      OIDC_CRYPTO_PASSPHRASE: ${OIDC_CRYPTO_PASSPHRASE}
-      KEYCLOAK_ADDR: http://${HOST_IP?Environment variable HOST_IP must be set}:7501
-      KEYCLOAK_REALM: ${GATEKEEPER_REALM}
-      CLIENT_ID: ${GATEKEEPER_CLIENT_ID}
-      CLIENT_SECRET: ${GATEKEEPER_CLIENT_SECRET}
-      FQDN: localhost
-      PROTECTED_BASE_URI: http://localhost:7500
-      PROTECTED_PATH: /
-      PROXY_PASS: http://protected:8080/
+      - "80:80"
+      - "443:443"
     depends_on:
-      - protected
+      - keycloak
+  postgres:
+    image: postgres
+    volumes:
+      - ${DB_DIR}:/var/lib/postgresql/data
+    networks:
+      - backnet
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}  
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ${CERTBOT_DIR}/conf:/etc/letsencrypt
+      - ${CERTBOT_DIR}/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - backnet  
+  keycloak:
+    image: jboss/keycloak:latest
+    volumes:
+      - ./keycloak/setup:/opt/jboss/keycloak/setup
+    networks:
+      - backnet
+    depends_on:
+      - postgres
+    environment:
+      PROXY_ADDRESS_FORWARDING: "true"
+      KEYCLOAK_USER: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_LOGLEVEL: ERROR
+      ROOT_LOGLEVEL: INFO
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres
+      DB_DATABASE: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_SCHEMA: public
+      DB_PASSWORD: ${DB_PASSWORD}
+  keycloak-config:
+    build: ./keycloak-config/
+    networks:
+      - backnet
+    volumes:
+      - ./keycloak-config:/code  
+    environment:
+      PROXY_ADDRESS_FORWARDING: "true"
+      KEYCLOAK_BASE_URL: ${KEYCLOAK_BASE_URL}
+      KEYCLOAK_USER: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    depends_on:
+      - keycloak
+  
     
-networks:
-  app-network:
-    driver: bridge
+    

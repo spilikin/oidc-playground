@@ -10,11 +10,12 @@ import re
 import urllib.parse
 import requests
 
-provider = "http://localhost:7501/auth/realms/realm0"
-client_id = "oidc-native-app-client"
-username = "user0"
-password = "password0"
-redirect_uri = "http://localhost:7500"
+verify=False
+provider = "https://localhost/auth/realms/healthid"
+client_id = "public-client"
+username = "99775533@healthid.life"
+password = "99775533"
+redirect_uri = "https://localhost"
 
 code_verifier = base64.urlsafe_b64encode(os.urandom(40)).decode('utf-8')
 code_verifier = re.sub('[^a-zA-Z0-9]+', '', code_verifier)
@@ -37,9 +38,12 @@ resp = requests.get(
         "code_challenge": code_challenge,
         "code_challenge_method": "S256",
     },
-    allow_redirects=False
+    allow_redirects=False,
+    verify=verify
 )
-print (resp.status_code)
+
+if resp.status_code >= 400:
+    exit (resp.text)
 
 cookie = resp.headers['Set-Cookie']
 cookie = '; '.join(c.split(';')[0] for c in cookie.split(', '))
@@ -56,9 +60,13 @@ resp = requests.post(
         "password": password,
     }, 
     headers={"Cookie": cookie},
-    allow_redirects=False
+    allow_redirects=False,
+    verify=verify
 )
 print(resp.status_code)
+
+if not 'Location' in resp.headers:
+    exit(resp.text)
 
 redirect = resp.headers['Location']
 print(redirect)
@@ -81,7 +89,8 @@ resp = requests.post(
         "code": auth_code,
         "code_verifier": code_verifier,
     },
-    allow_redirects=False
+    allow_redirects=False,
+    verify=verify
 )
 print(resp.status_code)
 
@@ -94,7 +103,7 @@ def _b64_decode(data):
 
 def jwt_payload_decode(jwt):
     _, payload, _ = jwt.split('.')
-    return json.loads(_b64_decode(payload))
+    return json.dumps(json.loads(_b64_decode(payload)), indent=2)
 
 print(jwt_payload_decode(result['access_token']))
 
