@@ -1,4 +1,5 @@
 from keycloak import KeycloakAdmin
+from keycloak import KeycloakOpenID
 from os import environ
 import json
 

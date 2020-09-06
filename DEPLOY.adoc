@@ -1,0 +1,31 @@
+.Prepare Docker Environment
+[bash]
+----
+sudo groupadd docker
+sudo useradd -m -g docker -G sudo docker -s /bin/bash
+sudo mkdir /home/docker/.ssh/
+sudo cat > /home/docker/.ssh/authorized_keys
+
+sudo visudo
+> # Allow members of group sudo to execute any command
+> %sudo   ALL=(ALL:ALL) NOPASSWD:ALL
+
+# Install Docker and Docker Compose
+# Add following line to .bashrc
+# export $(cat env.prod | sed 's/#.*//g' | xargs)
+----
+
+
+.Run keycloak config script
+----
+docker-compose run keycloak-config python /code/keycloak-config.py
+----
+
+.Add alias to to ~/.ssh/config
+----
+Host globex
+     Hostname 2.56.97.3
+     User docker
+     IdentityFile ~/.ssh/id_ecdsa
+----
+
